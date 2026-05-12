@@ -201,8 +201,8 @@
   </section>
 
   <section>
-    <h2>1. Sugar vs Rating</h2>
-    <p class="section-text">This chart lets users see how sugar relates to cereal ratings. You can filter by manufacturer and hover over each point to see the cereal.</p>
+    <h2>1. Sugar, Rating, and Fiber Bubble Chart</h2>
+    <p class="section-text">This bubble chart shows how sugar relates to cereal ratings. Each bubble is a cereal, the bubble size represents fiber, and the color represents the manufacturer. You can filter by manufacturer and hover over each bubble to learn more.</p>
 
     <div class="card">
       <div class="controls">
@@ -334,7 +334,7 @@
         drawComparison();
       });
 
-    function parseCSV(text) {
+   function parseCSV(text) {
     const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
     const headers = lines[0]
         .split(',')
@@ -379,36 +379,99 @@
     }
 
     function drawScatter() {
-      const svg = document.getElementById('scatterPlot');
-      svg.innerHTML = '';
-      const width = svg.clientWidth || 900;
-      const height = 450;
-      const pad = 60;
+    const svg = document.getElementById('scatterPlot');
+    svg.innerHTML = '';
 
-      const selected = document.getElementById('scatterFilter').value;
-      const data = selected === 'All' ? cereals : cereals.filter(d => d.mfrName === selected);
+    const width = svg.clientWidth || 900;
+    const height = 450;
+    const pad = 75;
 
-      const maxSugar = Math.max(...cereals.map(d => d.sugars));
-      const maxRating = Math.max(...cereals.map(d => d.rating));
-      const minRating = Math.min(...cereals.map(d => d.rating));
+    const selected = document.getElementById('scatterFilter').value;
+    const data =
+        selected === 'All'
+        ? cereals
+        : cereals.filter(d => d.mfrName === selected);
 
-      drawAxes(svg, width, height, pad, 'Sugar', 'Rating');
+    const xMetric = 'sugars';
+    const yMetric = 'rating';
+    const bubbleMetric = 'fiber';
 
-      data.forEach(d => {
-        const x = pad + (d.sugars / maxSugar) * (width - pad * 2);
-        const y = height - pad - ((d.rating - minRating) / (maxRating - minRating)) * (height - pad * 2);
+    const maxX = Math.max(...cereals.map(d => d[xMetric]));
+    const minX = Math.min(...cereals.map(d => d[xMetric]));
+    const maxY = Math.max(...cereals.map(d => d[yMetric]));
+    const minY = Math.min(...cereals.map(d => d[yMetric]));
+    const maxBubble = Math.max(...cereals.map(d => d[bubbleMetric]));
+
+    const manufacturerColors = {
+        'General Mills': '#f39c12',
+        'Kelloggs': '#e74c3c',
+        'Nabisco': '#2ecc71',
+        'Post': '#3498db',
+        'Quaker Oats': '#9b59b6',
+        'Ralston Purina': '#1abc9c',
+        'American Home Food Products': '#f1c40f'
+    };
+
+    drawAxes(svg, width, height, pad, 'Sugar', 'Rating');
+
+    // light grid lines
+    for (let i = 1; i <= 4; i++) {
+        const gx = pad + i * ((width - pad * 2) / 5);
+        const gy = pad + i * ((height - pad * 2) / 5);
+
+        svg.appendChild(createSVG('line', {
+        x1: gx, y1: pad, x2: gx, y2: height - pad,
+        stroke: '#eee', 'stroke-width': 1
+        }));
+
+        svg.appendChild(createSVG('line', {
+        x1: pad, y1: gy, x2: width - pad, y2: gy,
+        stroke: '#eee', 'stroke-width': 1
+        }));
+    }
+
+    data.forEach(d => {
+        const x =
+        pad +
+        ((d[xMetric] - minX) / (maxX - minX)) *
+            (width - pad * 2);
+
+        const y =
+        height -
+        pad -
+        ((d[yMetric] - minY) / (maxY - minY)) *
+            (height - pad * 2);
+
+        // better bubble sizing
+        const radius =
+        5 + Math.sqrt(d[bubbleMetric] / maxBubble) * 16;
+
         const circle = createSVG('circle', {
-          cx: x,
-          cy: y,
-          r: 7,
-          fill: '#f39c12',
-          stroke: '#8a4b00',
-          'stroke-width': 1.5
+        cx: x,
+        cy: y,
+        r: radius,
+        fill: manufacturerColors[d.mfrName] || '#f39c12',
+        opacity: 0.7,
+        stroke: '#3a2a12',
+        'stroke-width': 1
         });
-        circle.addEventListener('mousemove', e => showTooltip(e, `<strong>${d.name}</strong><br>Sugar: ${d.sugars}g<br>Rating: ${d.rating.toFixed(1)}<br>Brand: ${d.mfrName}`));
+
+        circle.addEventListener('mousemove', e =>
+        showTooltip(
+            e,
+            `
+            <strong>${d.name}</strong><br>
+            Manufacturer: ${d.mfrName}<br>
+            Sugar: ${d.sugars}g<br>
+            Rating: ${d.rating.toFixed(1)}<br>
+            Fiber: ${d.fiber}g
+            `
+        )
+        );
+
         circle.addEventListener('mouseleave', hideTooltip);
         svg.appendChild(circle);
-      });
+    });
     }
 
     function drawManufacturerChart() {
@@ -511,15 +574,19 @@
         rect.addEventListener('mouseleave', hideTooltip);
         svg.appendChild(rect);
 
+        const labelX = x + (barWidth - 10) / 2;
+        const labelY = height - pad + 18;
+
         const label = createSVG('text', {
-          x: x + barWidth / 2 - 5,
-          y: height - pad + 20,
-          'text-anchor': 'middle',
-          'font-size': '10',
-          fill: '#3a2a12',
-          transform: `rotate(45 ${x + barWidth / 2} ${height - pad + 20})`
+        x: labelX,
+        y: labelY,
+        'text-anchor': 'end',
+        'font-size': '11',
+        fill: '#3a2a12',
+        transform: `rotate(-35 ${labelX} ${labelY})`
         });
-        label.textContent = d.name.length > 12 ? d.name.slice(0, 12) + '…' : d.name;
+
+        label.textContent = d.name.length > 16 ? d.name.slice(0, 16) + '…' : d.name;
         svg.appendChild(label);
       });
     }
