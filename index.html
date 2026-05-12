@@ -598,25 +598,47 @@ Wheaties Honey Gold,G,C,110,2,1,200,1,16,8,60,25,1,1,0.75,36.187559`;
  
   const tt = document.getElementById('tt');
  
-  function showTip(e, html) {
+    function showTip(e, html) {
     tt.innerHTML = html;
     tt.style.opacity = 1;
-    tt.style.left = (e.clientX + 14) + 'px';
-    tt.style.top  = (e.clientY + 14) + 'px';
-  }
+
+    const tooltipWidth = 220;
+    const tooltipHeight = 120;
+
+    let left = e.clientX + 14;
+    let top = e.clientY + 14;
+
+    if (left + tooltipWidth > window.innerWidth) {
+    left = e.clientX - tooltipWidth - 14;
+    }
+
+    if (top + tooltipHeight > window.innerHeight) {
+    top = e.clientY - tooltipHeight - 14;
+    }
+
+    tt.style.left = left + 'px';
+    tt.style.top = top + 'px';
+    }
   function hideTip() { tt.style.opacity = 0; }
  
   /* ── CSV PARSER ── */
-  function parseCSV(text) {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    function parseCSV(text) {
+    const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+    const headers = lines[0]
+        .split(',')
+        .map(h => h.replace(/^\uFEFF/, '').trim().toLowerCase());
+
     return lines.slice(1).map(line => {
-      const vals = line.split(',');
-      const obj = {};
-      headers.forEach((h, i) => obj[h] = vals[i]?.trim());
-      return obj;
+        const vals = line.split(',');
+        const obj = {};
+
+        headers.forEach((h, i) => {
+        obj[h] = vals[i]?.trim() ?? '';
+        });
+
+        return obj;
     });
-  }
+    }
  
   /* ── SVG HELPER ── */
   function mkSVG(tag, attrs) {
@@ -761,7 +783,7 @@ Wheaties Honey Gold,G,C,110,2,1,200,1,16,8,60,25,1,1,0.75,36.187559`;
     const H  = +svgEl.getAttribute('height') || 360;
     const pad = { t: 20, r: 20, b: 75, l: 55 };
     const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
-    const maxVal = Math.max(...data.map(d => d.value));
+    const maxVal = Math.max(...data.map(d => d.value), 1);
     const bw = pw / data.length;
  
     /* Grid + y-ticks */
@@ -893,11 +915,18 @@ Wheaties Honey Gold,G,C,110,2,1,200,1,16,8,60,25,1,1,0.75,36.187559`;
   drawComparison();
  
   /* Re-draw charts on resize */
-  window.addEventListener('resize', () => {
+/* Re-draw charts on resize */
+let resizeTimer;
+
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+
+  resizeTimer = setTimeout(() => {
     drawScatter();
     drawManufacturerChart();
     drawMetricChart();
-  });
+  }, 150);
+});
 </script>
 </body>
 </html>
