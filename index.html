@@ -710,15 +710,15 @@ Wheaties Honey Gold,G,C,110,2,1,200,1,16,8,60,25,1,1,0.75,36.187559`;
     const svg = document.getElementById('scatterPlot');
     svg.innerHTML = '';
     const W = svg.clientWidth || 700, H = 400;
-    const pad = { t: 20, r: 20, b: 50, l: 55 };
+    const pad = { t: 35, r: 45, b: 65, l: 75 };
     const pw = W - pad.l - pad.r, ph = H - pad.t - pad.b;
  
     const sel  = document.getElementById('scatterFilter').value;
     const data = sel === 'All' ? cereals : cereals.filter(d => d.mfrName === sel);
  
     const xMin = 0, xMax = Math.max(...cereals.map(d => d.sugars)) + 1;
-    const yMin = Math.floor(Math.min(...cereals.map(d => d.rating)) - 2);
-    const yMax = Math.ceil( Math.max(...cereals.map(d => d.rating)) + 2);
+    const yMin = Math.floor(Math.min(...cereals.map(d => d.rating)) - 6);
+    const yMax = Math.ceil(Math.max(...cereals.map(d => d.rating)) + 8);
     const maxFiber = Math.max(...cereals.map(d => d.fiber));
  
     const xScale = v => pad.l + (v - xMin) / (xMax - xMin) * pw;
@@ -759,7 +759,7 @@ Wheaties Honey Gold,G,C,110,2,1,200,1,16,8,60,25,1,1,0.75,36.187559`;
     data.forEach(d => {
       const cx = xScale(d.sugars);
       const cy = yScale(d.rating);
-      const r  = 5 + Math.sqrt(Math.max(0, d.fiber) / maxFiber) * 14;
+      const r = 4 + Math.sqrt(Math.max(0, d.fiber) / maxFiber) * 10;
       const c  = mkSVG('circle', {
         cx, cy, r,
         fill: mfrColors[d.mfrName] || '#C47A2B',
