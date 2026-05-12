@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Are Cereals Really Healthy?</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff7df;
+      color: #3a2a12;
+      line-height: 1.6;
+    }
+
+    section {
+      padding: 80px 8%;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(180deg, #ffe082, #fff7df);
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      color: #d35400;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 1.3rem;
+      max-width: 700px;
+    }
+
+    .emoji {
+      font-size: 4rem;
+      margin-top: 30px;
+    }
+
+    h2 {
+      font-size: 2.5rem;
+      color: #d35400;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .section-text {
+      max-width: 800px;
+      margin: 0 auto 40px auto;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      margin: 0 auto;
+      max-width: 1100px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    select, button {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 2px solid #f39c12;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button.active, button:hover, select:hover {
+      background: #f39c12;
+      color: white;
+    }
+
+    svg {
+      width: 100%;
+      height: 450px;
+      overflow: visible;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #3a2a12;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: 0.2s;
+      max-width: 220px;
+      z-index: 10;
+    }
+
+    .axis-label {
+      font-size: 12px;
+      fill: #5c4218;
+    }
+
+    .bar {
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .bar:hover {
+      opacity: 0.75;
+    }
+
+    .cereal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .cereal-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .cereal-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .sugar-cubes {
+      font-size: 1.3rem;
+      margin-top: 10px;
+      word-break: break-word;
+    }
+
+    .comparison-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-top: 30px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+      padding: 8px 0;
+    }
+
+    .takeaways {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    .takeaway {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+      font-size: 1.1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 50px;
+      background: #ffcc66;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="tooltip" id="tooltip"></div>
+
+  <section class="hero">
+    <h1>Are Cereals Really Healthy?</h1>
+    <p>Some cereals look healthy until you actually check the nutrition facts. Explore the data and see which cereals are secretly full of sugar.</p>
+    <div class="emoji">🥣</div>
+    <p style="margin-top: 30px;">Scroll to explore ↓</p>
+  </section>
+
+  <section>
+    <h2>1. Sugar vs Rating</h2>
+    <p class="section-text">This chart lets users see how sugar relates to cereal ratings. You can filter by manufacturer and hover over each point to see the cereal.</p>
+
+    <div class="card">
+      <div class="controls">
+        <label>
+          Manufacturer:
+          <select id="scatterFilter"></select>
+        </label>
+      </div>
+      <svg id="scatterPlot"></svg>
+    </div>
+  </section>
+
+  <section style="background:#fff0c2;">
+    <h2>2. Manufacturer Comparison</h2>
+    <p class="section-text">This compares the average sugar, fiber, calories, or rating for each manufacturer. Use the dropdown to change what you are comparing.</p>
+
+    <div class="card">
+      <div class="controls">
+        <label>
+          Compare:
+          <select id="manufacturerMetric">
+            <option value="sugars">Average Sugar</option>
+            <option value="fiber">Average Fiber</option>
+            <option value="calories">Average Calories</option>
+            <option value="protein">Average Protein</option>
+            <option value="rating">Average Rating</option>
+          </select>
+        </label>
+      </div>
+      <svg id="manufacturerChart"></svg>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. Metric Toggle</h2>
+    <p class="section-text">Users can switch between nutrition categories and see which cereals stand out the most.</p>
+
+    <div class="card">
+      <div class="controls" id="metricButtons"></div>
+      <svg id="metricChart"></svg>
+    </div>
+  </section>
+
+  <section style="background:#fff0c2;">
+    <h2>4. Hidden Sugar</h2>
+    <p class="section-text">This section turns sugar into sugar cubes so users can quickly see which cereals have the most sugar.</p>
+
+    <div class="controls">
+      <label>
+        Show cereals:
+        <select id="sugarSort">
+          <option value="high">Highest Sugar First</option>
+          <option value="low">Lowest Sugar First</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="cereal-grid" id="sugarCards"></div>
+  </section>
+
+  <section>
+    <h2>5. Cereal Comparison Tool</h2>
+    <p class="section-text">Pick two cereals and compare their nutrition side by side.</p>
+
+    <div class="card">
+      <div class="controls">
+        <select id="cerealA"></select>
+        <select id="cerealB"></select>
+      </div>
+      <div class="comparison-box" id="comparisonBox"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Final Takeaway</h2>
+    <p class="section-text">Not all cereals are as healthy as they seem. By interacting with the charts, users can discover that sugar, fiber, calories, and brand all affect how healthy a cereal looks.</p>
+
+    <div class="takeaways">
+      <div class="takeaway">🍬 Higher sugar cereals usually have lower ratings.</div>
+      <div class="takeaway">🌾 Higher fiber cereals usually look healthier overall.</div>
+      <div class="takeaway">📊 Interactive charts help users discover patterns themselves.</div>
+    </div>
+  </section>
+
+  <footer>
+    Cereal Nutrition Interactive Story
+  </footer>
+
+  <script>
+    let cereals = [];
+    let activeMetric = 'sugars';
+
+    const mfrNames = {
+      A: 'American Home Food Products',
+      G: 'General Mills',
+      K: 'Kelloggs',
+      N: 'Nabisco',
+      P: 'Post',
+      Q: 'Quaker Oats',
+      R: 'Ralston Purina'
+    };
+
+    const tooltip = document.getElementById('tooltip');
+
+    fetch('cereal.csv')
+      .then(response => response.text())
+      .then(text => {
+        cereals = parseCSV(text).map(d => ({
+          name: d.name,
+          mfr: d.mfr,
+          mfrName: mfrNames[d.mfr] || d.mfr,
+          calories: Number(d.calories),
+          protein: Number(d.protein),
+          fat: Number(d.fat),
+          sodium: Number(d.sodium),
+          fiber: Number(d.fiber),
+          carbo: Number(d.carbo),
+          sugars: Number(d.sugars),
+          potass: Number(d.potass),
+          vitamins: Number(d.vitamins),
+          rating: Number(d.rating)
+        })).filter(d => d.name && !Number.isNaN(d.rating));
+
+        setupControls();
+        drawScatter();
+        drawManufacturerChart();
+        drawMetricChart();
+        drawSugarCards();
+        drawComparison();
+      });
+
+    function parseCSV(text) {
+    const lines = text.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+    const headers = lines[0]
+        .split(',')
+        .map(h => h.replace(/^\uFEFF/, '').trim().toLowerCase());
+
+    return lines.slice(1).map(line => {
+        const values = line.split(',');
+        let obj = {};
+        headers.forEach((h, i) => {
+        obj[h] = values[i]?.trim();
+        });
+        return obj;
+    });
+    }
+
+    function setupControls() {
+      const manufacturers = ['All', ...new Set(cereals.map(d => d.mfrName))];
+      const scatterFilter = document.getElementById('scatterFilter');
+      scatterFilter.innerHTML = manufacturers.map(m => `<option value="${m}">${m}</option>`).join('');
+      scatterFilter.addEventListener('change', drawScatter);
+
+      document.getElementById('manufacturerMetric').addEventListener('change', drawManufacturerChart);
+      document.getElementById('sugarSort').addEventListener('change', drawSugarCards);
+
+      const metrics = ['sugars', 'fiber', 'protein', 'calories', 'rating'];
+      const buttonBox = document.getElementById('metricButtons');
+      buttonBox.innerHTML = metrics.map(m => `<button data-metric="${m}" class="${m === activeMetric ? 'active' : ''}">${capitalize(m)}</button>`).join('');
+      buttonBox.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', () => {
+          activeMetric = button.dataset.metric;
+          setupControls();
+          drawMetricChart();
+        });
+      });
+
+      const cerealOptions = cereals.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
+      document.getElementById('cerealA').innerHTML = cerealOptions;
+      document.getElementById('cerealB').innerHTML = cerealOptions;
+      document.getElementById('cerealB').selectedIndex = 1;
+      document.getElementById('cerealA').addEventListener('change', drawComparison);
+      document.getElementById('cerealB').addEventListener('change', drawComparison);
+    }
+
+    function drawScatter() {
+      const svg = document.getElementById('scatterPlot');
+      svg.innerHTML = '';
+      const width = svg.clientWidth || 900;
+      const height = 450;
+      const pad = 60;
+
+      const selected = document.getElementById('scatterFilter').value;
+      const data = selected === 'All' ? cereals : cereals.filter(d => d.mfrName === selected);
+
+      const maxSugar = Math.max(...cereals.map(d => d.sugars));
+      const maxRating = Math.max(...cereals.map(d => d.rating));
+      const minRating = Math.min(...cereals.map(d => d.rating));
+
+      drawAxes(svg, width, height, pad, 'Sugar', 'Rating');
+
+      data.forEach(d => {
+        const x = pad + (d.sugars / maxSugar) * (width - pad * 2);
+        const y = height - pad - ((d.rating - minRating) / (maxRating - minRating)) * (height - pad * 2);
+        const circle = createSVG('circle', {
+          cx: x,
+          cy: y,
+          r: 7,
+          fill: '#f39c12',
+          stroke: '#8a4b00',
+          'stroke-width': 1.5
+        });
+        circle.addEventListener('mousemove', e => showTooltip(e, `<strong>${d.name}</strong><br>Sugar: ${d.sugars}g<br>Rating: ${d.rating.toFixed(1)}<br>Brand: ${d.mfrName}`));
+        circle.addEventListener('mouseleave', hideTooltip);
+        svg.appendChild(circle);
+      });
+    }
+
+    function drawManufacturerChart() {
+      const svg = document.getElementById('manufacturerChart');
+      svg.innerHTML = '';
+      const width = svg.clientWidth || 900;
+      const height = 450;
+      const pad = 70;
+      const metric = document.getElementById('manufacturerMetric').value;
+
+      const grouped = [...new Set(cereals.map(d => d.mfrName))].map(mfr => {
+        const group = cereals.filter(d => d.mfrName === mfr);
+        return {
+          name: mfr,
+          value: average(group, metric)
+        };
+      });
+
+      drawBarChart(svg, grouped, width, height, pad, `Average ${capitalize(metric)}`, '#e67e22');
+    }
+
+    function drawMetricChart() {
+      const svg = document.getElementById('metricChart');
+      svg.innerHTML = '';
+      const width = svg.clientWidth || 900;
+      const height = 450;
+      const pad = 70;
+
+      const data = [...cereals]
+        .sort((a, b) => b[activeMetric] - a[activeMetric])
+        .slice(0, 15)
+        .map(d => ({ name: d.name, value: d[activeMetric], full: d }));
+
+      drawBarChart(svg, data, width, height, pad, capitalize(activeMetric), '#f1c40f');
+    }
+
+    function drawSugarCards() {
+      const box = document.getElementById('sugarCards');
+      const sort = document.getElementById('sugarSort').value;
+      const data = [...cereals]
+        .sort((a, b) => sort === 'high' ? b.sugars - a.sugars : a.sugars - b.sugars)
+        .slice(0, 12);
+
+      box.innerHTML = data.map(d => {
+        const cubes = '🧊'.repeat(Math.max(0, Math.min(18, Math.round(d.sugars))));
+        return `
+          <div class="cereal-card">
+            <h3>${d.name}</h3>
+            <p>${d.mfrName}</p>
+            <div class="sugar-cubes">${cubes}</div>
+            <p><strong>${d.sugars}g sugar</strong></p>
+            <p>Rating: ${d.rating.toFixed(1)}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function drawComparison() {
+      const aName = document.getElementById('cerealA').value;
+      const bName = document.getElementById('cerealB').value;
+      const a = cereals.find(d => d.name === aName);
+      const b = cereals.find(d => d.name === bName);
+      const metrics = ['calories', 'protein', 'fiber', 'sugars', 'sodium', 'rating'];
+
+      document.getElementById('comparisonBox').innerHTML = [a, b].map(cereal => `
+        <div class="cereal-card">
+          <h3>${cereal.name}</h3>
+          <p>${cereal.mfrName}</p>
+          ${metrics.map(m => `
+            <div class="stat-row">
+              <span>${capitalize(m)}</span>
+              <strong>${m === 'rating' ? cereal[m].toFixed(1) : cereal[m]}</strong>
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+    }
+
+    function drawBarChart(svg, data, width, height, pad, yLabel, color) {
+      const maxVal = Math.max(...data.map(d => d.value));
+      const barWidth = (width - pad * 2) / data.length;
+
+      drawAxes(svg, width, height, pad, '', yLabel);
+
+      data.forEach((d, i) => {
+        const x = pad + i * barWidth + 5;
+        const barHeight = (d.value / maxVal) * (height - pad * 2);
+        const y = height - pad - barHeight;
+
+        const rect = createSVG('rect', {
+          x,
+          y,
+          width: barWidth - 10,
+          height: barHeight,
+          fill: color,
+          rx: 8,
+          class: 'bar'
+        });
+        rect.addEventListener('mousemove', e => showTooltip(e, `<strong>${d.name}</strong><br>${yLabel}: ${d.value.toFixed(2)}`));
+        rect.addEventListener('mouseleave', hideTooltip);
+        svg.appendChild(rect);
+
+        const label = createSVG('text', {
+          x: x + barWidth / 2 - 5,
+          y: height - pad + 20,
+          'text-anchor': 'middle',
+          'font-size': '10',
+          fill: '#3a2a12',
+          transform: `rotate(45 ${x + barWidth / 2} ${height - pad + 20})`
+        });
+        label.textContent = d.name.length > 12 ? d.name.slice(0, 12) + '…' : d.name;
+        svg.appendChild(label);
+      });
+    }
+
+    function drawAxes(svg, width, height, pad, xLabel, yLabel) {
+      const xAxis = createSVG('line', { x1: pad, y1: height - pad, x2: width - pad, y2: height - pad, stroke: '#5c4218', 'stroke-width': 2 });
+      const yAxis = createSVG('line', { x1: pad, y1: pad, x2: pad, y2: height - pad, stroke: '#5c4218', 'stroke-width': 2 });
+      svg.appendChild(xAxis);
+      svg.appendChild(yAxis);
+
+      const xText = createSVG('text', { x: width / 2, y: height - 15, 'text-anchor': 'middle', class: 'axis-label' });
+      xText.textContent = xLabel;
+      svg.appendChild(xText);
+
+      const yText = createSVG('text', { x: 18, y: height / 2, 'text-anchor': 'middle', class: 'axis-label', transform: `rotate(-90 18 ${height / 2})` });
+      yText.textContent = yLabel;
+      svg.appendChild(yText);
+    }
+
+    function createSVG(tag, attrs) {
+      const element = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+      return element;
+    }
+
+    function showTooltip(event, html) {
+      tooltip.innerHTML = html;
+      tooltip.style.opacity = 1;
+      tooltip.style.left = event.pageX + 15 + 'px';
+      tooltip.style.top = event.pageY + 15 + 'px';
+    }
+
+    function hideTooltip() {
+      tooltip.style.opacity = 0;
+    }
+
+    function average(data, key) {
+      return data.reduce((sum, d) => sum + d[key], 0) / data.length;
+    }
+
+    function capitalize(word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }
+  </script>
+</body>
+</html>
